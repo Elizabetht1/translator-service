@@ -46,7 +46,7 @@ Now that you have a dummy translator service deployed, you can integrate it into
 
 You can merge this commit directly if you know how to set up a new remote and perform cherry picking; or you can just look at the diffs above and copy+paste the changes carefully into your own NodeBB repos. These are provided only as suggestions but you are welcome to do something else.
 
-Note that you will have to edit the translator service API URL in your integration: https://github.com/CMU-313/NodeBB/blob/f24-p4/src/translate/index.js#L7
+Note that you will have to edit the translator service API URL in your integration: https://github.com/CMU-313/NodeBB/blob/f25-p4/src/translate/index.js#L7
 
 ## Testing the integration
 
