@@ -50,7 +50,9 @@ Note that you will have to edit the translator service API URL in your integrati
 
 ## Testing the integration
 
-Re-deploy your NodeBB after merging docker. Now, when you create a new post using one of the hard-coded non-English texts they should get translated auotmatically by the back-end:
+Follow the directions [here](https://docs.google.com/document/d/1vM-cZgpNuNibH33CnbI2BxfxJbBBu58xgSQoYFtky5g/edit?tab=t.0) for how to change your docker-compose file. Then redeploy using Docker.
+
+Now, when you create a new post using one of the hard-coded non-English texts they should get translated auotmatically by the back-end:
 
 ![image](https://github.com/user-attachments/assets/61f1d9ca-3ca4-4a68-8869-d381d3d06ac6)
 
