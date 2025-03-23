@@ -46,11 +46,9 @@ Now that you have a dummy translator service deployed, you can integrate it into
 
 You can merge this commit directly if you know how to set up a new remote and perform cherry picking; or you can just look at the diffs above and copy+paste the changes carefully into your own NodeBB repos. These are provided only as suggestions but you are welcome to do something else.
 
-Note that you will have to edit the translator service API URL in your integration (change it to http://translator:5000/): https://github.com/CMU-313/NodeBB/blob/f25-p4/src/translate/index.js#L7
-
 ## Testing the integration
 
-Follow the directions [here](https://docs.google.com/document/d/1vM-cZgpNuNibH33CnbI2BxfxJbBBu58xgSQoYFtky5g/edit?tab=t.0) for how to change your docker-compose file. Then redeploy using Docker.
+Redeploy NodeBB to your Linux VM using Docker.
 
 Now, when you create a new post using one of the hard-coded non-English texts they should get translated auotmatically by the back-end:
 
