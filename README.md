@@ -48,7 +48,9 @@ You can merge this commit directly if you know how to set up a new remote and pe
 
 ## Testing the integration
 
-In your project package.json file change the theme import to the local filepath: "nodebb-theme-harmony": "file:./nodebb-theme-harmony",
+In your project install/package.json file change the theme import to the local filepath: "nodebb-theme-harmony": "file:./nodebb-theme-harmony",
+
+### Note: this should be the install/package.json file, NOT the /package.json file
 
 Then redeploy NodeBB to your Linux VM using Docker. 
 

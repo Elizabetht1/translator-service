@@ -36,7 +36,7 @@ import openai
 #     return True, content
 
 client = openai.OpenAI(
-    api_key="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"
+    api_key="OPEN_AI_KEY"
 )
 
 def display_usage(response):
