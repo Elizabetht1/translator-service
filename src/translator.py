@@ -47,7 +47,7 @@ def get_translation(post: str) -> str:
       messages=[
           {
               "role": "user",
-              "content": context + "\n" + post
+              "content": context + "\nThe text:" + post
           }
       ]
     )
@@ -110,9 +110,10 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
   if not (len(post) > 0 and len(translation) > 0):
     errno = 2
 
-  if not (((len(post) - len(translation))^2)**2 > 50):
+  # If the post length DRASTICALLY differs,
+  # this indicates we did not translate correctly.
+  if (((len(post) - len(translation))^2)**2 > 50):
     errno = 3
-
 
   if not (type(isEnglish) == bool):
     errno = 4
