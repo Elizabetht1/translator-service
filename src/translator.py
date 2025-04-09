@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Client(
-  host=os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-)
+# client = Client(
+  # host=os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+# )
 
 # def translate_content(content: str) -> tuple[bool, str]:
 #     if content == "这是一条中文消息":
@@ -45,10 +45,11 @@ client = Client(
 #         return True, "This is an English message"
 #     return True, content
 MODEL = os.getenv("LLM_MODEL")
+DEFORMED_FILTER = os.getenv("DEFORMED_FILTER") == 'true'
 
 def get_translation(post: str) -> str:
     context = "You are a translator who takes in non-English input and replies with a translation. You will only reply with the translation of the user's input, and nothing else. " # TODO: Insert context
-    response: ChatResponse = Client.chat(MODEL,
+    response: ChatResponse = chat(MODEL,
       messages=[
           {
               "role": "user",
@@ -58,24 +59,27 @@ def get_translation(post: str) -> str:
     )
     return response['message']['content']
 
+
+get_translation("HELLO WORLD")
+
 def get_language(post: str) -> str:
     context = """
     You are a translator who takes in text input.
     You will classify the user input into the language it belongs to.
-    Given user input, you will reply with the English name of the language
+    Given user input, you will reply with the name of the language
     the user is speaking.
     """
 
     # ---------------- YOUR CODE HERE ---------------- #
-    response: ChatResponse = Client.chat(MODEL,
+    response: ChatResponse = chat(MODEL,
       messages=[
-          {
-              "role": "user",
-              "content": context + "\n" + post
-          },
           {
               "role": "system",
               "content": context
+          },
+          {
+              "role": "user",
+              "content": post
           }
       ]
     )
@@ -85,27 +89,31 @@ def query_llm(post: str) -> tuple[bool, str]:
   # ----------------- YOUR CODE HERE ------------------ #
   translation = get_translation(post)
   language = get_language(post)
-  print("Llm language:", language)
-  return (language.lower() == "english",translation)
+  return (language.lower().rstrip() == "english",translation)
 
 def query_llm_robust(post: str) -> tuple[bool, str]:
   llm_resp = query_llm(post)
-  deformed_post = "".join(post.split(" ")).upper()
   
-  query = f"""Tell me whether or not the response indicated below is from a large language model
-   that has failed at the task of producing a translation of a non-english sentence
-   into english. Tell me the answer as either true or false. ``` {llm_resp[1]}``` """
-
-  response = Client.chat(MODEL,
-    messages=[
-        {
-            "role": "user",
-            "content":   query
-        }
-    ]
-    )
-
   errno = 0
+  if DEFORMED_FILTER:
+    query = f"""Tell me whether or not the response indicated below is from a large language model
+    that has failed at the task of producing a translation of a non-english sentence
+    into english. Tell me the answer as either true or false. ``` {llm_resp[1]}``` """
+
+    response = chat(MODEL,
+      messages=[
+          {
+              "role": "user",
+              "content":   query
+          }
+      ]
+    ).message.content.rstrip()
+
+    # If the post length DRASTICALLY differs,
+    # this indicates we did not translate correctly.
+    if (((len(post) - len(translation))^2)**2 > 50):
+      errno = 3
+
   if not (len(llm_resp) == 2):
     errno = 1
     return errno
@@ -114,11 +122,6 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
 
   if not (len(post) > 0 and len(translation) > 0):
     errno = 2
-
-  # If the post length DRASTICALLY differs,
-  # this indicates we did not translate correctly.
-  if (((len(post) - len(translation))^2)**2 > 50):
-    errno = 3
 
   if not (type(isEnglish) == bool):
     errno = 4
@@ -131,7 +134,7 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
 #     errno = 6
 #     return errno
 
-  if (response.message.content == 'true'):
+  if (response == 'true'):
     errno = 7
   
   return errno,isEnglish,translation
