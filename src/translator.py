@@ -109,6 +109,9 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
       ]
     ).message.content.rstrip()
 
+    if (response == 'true'):
+      errno = 7
+
     # If the post length DRASTICALLY differs,
     # this indicates we did not translate correctly.
     if (((len(post) - len(translation))^2)**2 > 50):
@@ -133,9 +136,6 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
 #   if response == 'true':
 #     errno = 6
 #     return errno
-
-  if (response == 'true'):
-    errno = 7
   
   return errno,isEnglish,translation
 
