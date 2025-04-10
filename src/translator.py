@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# client = Client(
-  # host=os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-# )
+client = Client(
+  host=os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+)
 
 # def translate_content(content: str) -> tuple[bool, str]:
 #     if content == "这是一条中文消息":
@@ -49,7 +49,7 @@ DEFORMED_FILTER = os.getenv("DEFORMED_FILTER") == 'true'
 
 def get_translation(post: str) -> str:
     context = "You are a translator who takes in non-English input and replies with a translation. You will only reply with the translation of the user's input, and nothing else. " # TODO: Insert context
-    response: ChatResponse = chat(MODEL,
+    response: ChatResponse = client.chat(MODEL,
       messages=[
           {
               "role": "user",
@@ -60,8 +60,6 @@ def get_translation(post: str) -> str:
     return response['message']['content']
 
 
-get_translation("HELLO WORLD")
-
 def get_language(post: str) -> str:
     context = """
     You are a translator who takes in text input.
@@ -71,7 +69,7 @@ def get_language(post: str) -> str:
     """
 
     # ---------------- YOUR CODE HERE ---------------- #
-    response: ChatResponse = chat(MODEL,
+    response: ChatResponse = client.chat(MODEL,
       messages=[
           {
               "role": "system",
@@ -100,7 +98,7 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
     that has failed at the task of producing a translation of a non-english sentence
     into english. Tell me the answer as either true or false. ``` {llm_resp[1]}``` """
 
-    response = chat(MODEL,
+    response = client.chat(MODEL,
       messages=[
           {
               "role": "user",
