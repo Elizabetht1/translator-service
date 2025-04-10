@@ -1,4 +1,14 @@
-import openai
+from ollama import chat
+from ollama import Client
+from ollama import ChatResponse
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# client = Client(
+  # host=os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+# )
 
 # def translate_content(content: str) -> tuple[bool, str]:
 #     if content == "这是一条中文消息":
@@ -34,84 +44,76 @@ import openai
 #     if content == "This is an English message":
 #         return True, "This is an English message"
 #     return True, content
+MODEL = os.getenv("LLM_MODEL")
+DEFORMED_FILTER = os.getenv("DEFORMED_FILTER") == 'true'
 
-client = openai.OpenAI(
-    api_key="OPEN_AI_KEY"
-)
-
-def display_usage(response):
-  print("\n used ", response.usage.total_tokens, " tokens .......... \n")
 def get_translation(post: str) -> str:
     context = "You are a translator who takes in non-English input and replies with a translation. You will only reply with the translation of the user's input, and nothing else. " # TODO: Insert context
-    response = client.chat.completions.create(
-    model="gpt-4o-mini",  # model name
-    messages=[
-        {
-            "role": "user",
-            "content": post
-        },
-        {
-            "role": "system",
-            "content": context
-        }
-    ]
+    response: ChatResponse = chat(MODEL,
+      messages=[
+          {
+              "role": "user",
+              "content": context + "\nThe text:" + post
+          }
+      ]
     )
-    display_usage(response)
-    return response.choices[0].message.content
+    return response['message']['content']
+
+
+get_translation("HELLO WORLD")
 
 def get_language(post: str) -> str:
     context = """
     You are a translator who takes in text input.
     You will classify the user input into the language it belongs to.
-    Given user input, you will reply with the English name of the language
+    Given user input, you will reply with the name of the language
     the user is speaking.
     """
 
     # ---------------- YOUR CODE HERE ---------------- #
-    response = client.chat.completions.create(
-    model="gpt-4o-mini",  # model name
-    messages=[
-        {
-            "role": "user",
-            "content": post
-        },
-        {
-            "role": "system",
-            "content": context
-        }
-    ]
+    response: ChatResponse = chat(MODEL,
+      messages=[
+          {
+              "role": "system",
+              "content": context
+          },
+          {
+              "role": "user",
+              "content": post
+          }
+      ]
     )
-    display_usage(response)
-    return response.choices[0].message.content
+    return response['message']['content']
 
 def query_llm(post: str) -> tuple[bool, str]:
   # ----------------- YOUR CODE HERE ------------------ #
   translation = get_translation(post)
   language = get_language(post)
-  return (language.lower() == "English",translation)
-
+  return (language.lower().rstrip() == "english",translation)
 
 def query_llm_robust(post: str) -> tuple[bool, str]:
   llm_resp = query_llm(post)
-  deformed_post = "".join(post.split(" ")).upper()
-  llm_resp_deformed = query_llm(deformed_post)
   
-  query = f"""Tell me whether or not the response indicated below is from a large language model
-   that has failed at the task of producing a translation of a non-english sentence
-   into english. Tell me the answer as either true or false. ``` {llm_resp[1]}``` """
-
-#   response = client.chat.completions.create(
-#     model="gpt-4o-mini",  # model name
-#     messages=[
-#         {
-#             "role": "user",
-#             "content":   query
-#         }
-#     ]
-#     )
-#   display_usage(response)
-
   errno = 0
+  if DEFORMED_FILTER:
+    query = f"""Tell me whether or not the response indicated below is from a large language model
+    that has failed at the task of producing a translation of a non-english sentence
+    into english. Tell me the answer as either true or false. ``` {llm_resp[1]}``` """
+
+    response = chat(MODEL,
+      messages=[
+          {
+              "role": "user",
+              "content":   query
+          }
+      ]
+    ).message.content.rstrip()
+
+    # If the post length DRASTICALLY differs,
+    # this indicates we did not translate correctly.
+    if (((len(post) - len(translation))^2)**2 > 50):
+      errno = 3
+
   if not (len(llm_resp) == 2):
     errno = 1
     return errno
@@ -120,10 +122,6 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
 
   if not (len(post) > 0 and len(translation) > 0):
     errno = 2
-
-  if not (((len(post) - len(translation))^2)**2 > 50):
-    errno = 3
-
 
   if not (type(isEnglish) == bool):
     errno = 4
@@ -136,7 +134,7 @@ def query_llm_robust(post: str) -> tuple[bool, str]:
 #     errno = 6
 #     return errno
 
-  if (llm_resp == llm_resp_deformed):
+  if (response == 'true'):
     errno = 7
   
   return errno,isEnglish,translation
